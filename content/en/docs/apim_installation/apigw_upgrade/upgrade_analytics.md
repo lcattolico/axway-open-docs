@@ -1,20 +1,26 @@
 {
-    "title": "Upgrade API Gateway Analytics",
-    "linkTitle": "Upgrade API Gateway Analytics",
-    "weight": 60,
-    "date": "2019-10-07",
-    "description": "Upgrade API Gateway Analytics to version 7.7."
+"title": "Upgrade API Gateway Analytics",
+"linkTitle": "Upgrade API Gateway Analytics",
+"weight": 60,
+"date": "2019-10-07",
+"description": "Upgrade API Gateway Analytics to version 7.7."
 }
 
-If you are using an earlier version of API Gateway Analytics, you must follow the steps in this section to upgrade API Gateway Analytics to version 7.7. Data in your old API Gateway Analytics metrics database will be preserved and the upgraded database will be fully compatible with version 7.7.
+If you are using a version earlier than 7.7 of API Gateway Analytics, you must follow the steps in this section to upgrade API Gateway Analytics to version 7.7.
 
-{{< alert title="Note" color="primary" >}}For details on upgrading a metrics database for use with API Manager, see [Upgrade your metrics database for API Manager](/docs/apim_installation/apigw_upgrade/upgrade_metrics/) instead.{{< /alert >}}
+{{< alert title="Note" color="primary" >}}We recommend that you upgrade API Gateway Analytics before upgrading API Gateway using the `sysupgrade` command.{{< /alert >}}
 
-If you are upgrading from 7.4.0 and later versions, we recommend that you upgrade API Gateway Analytics before upgrading API Gateway using the `sysupgrade` command.
+Data in your old API Gateway Analytics metrics database will be preserved, and the upgraded database will be fully compatible with version 7.7.
+
+For details on upgrading a metrics database for use with API Manager, see [Upgrade your metrics database for API Manager](/docs/apim_installation/apigw_upgrade/upgrade_metrics/) instead.
 
 If you create a new API Gateway Analytics metrics database as part of a rollback strategy, you must run `managedomain` on every host to change the database URL to that of the newly created database after you have completed the `sysupgrade apply` step.
 
 For frequently asked questions about upgrading API Gateway Analytics, see [API Gateway Analytics and metrics database upgrades](/docs/apim_installation/apigw_upgrade/upgrade_faq/#api-gateway-analytics-and-metrics-database-upgrades).
+
+## Rollback strategy
+
+If you want to be able to revert back to your old version of API Gateway Analytics and API Gateway, the best approach is to create a new API Gateway Analytics metrics database for version 7.7. The old versions can then be relaunched without changes. Where appropriate, this section details additional tasks that you need to perform to implement this rollback strategy.
 
 ## Summary of steps
 
@@ -28,10 +34,6 @@ The following summarizes the steps to upgrade API Gateway Analytics. Some of the
 6. Migrate any custom reports.
 7. Stop the old version of the API Gateway Analytics service and start the new 7.7 version.
 8. Run `managedomain` to enable API Gateway Analytics for the Node Managers. You must also run `managedomain` to update the metrics database URL if you created a new database (for example, as part of a rollback strategy).
-
-## Rollback strategy
-
-If you want to be able to revert back to your old version of API Gateway Analytics and API Gateway, the best approach is to create a new API Gateway Analytics metrics database for version 7.7. The old versions can then be relaunched without changes. Where appropriate, this section details additional tasks that you need to perform to implement this rollback strategy.
 
 ## Step 1 – Install API Gateway Analytics 7.7
 
@@ -244,17 +246,25 @@ If you have implemented the rollback strategy described in the preceding section
 1. Stop the API Gateway Analytics service, the API Gateways, and the Node Managers in the new installation.
 2. Restart the API Gateway Analytics service, the API Gateways, and the Node Managers in the old installation.
 
-## How to migrate the Analytics Database
+## Migrate the Analytics database to another database
 
-This page describe the steps need to migrate the Analytics Database to another Database:
+Follow these steps to migrate the Analytics database to another database:
 
-1. Do not configure previously the new Gateway to use metrics.
-2. Create the new Analytics Database (Ex: in MySQL DB, you can use CREATE DATABASE &lt;DatabaseName&gt;;).
-3. Stop the old API Gateway and Analytics (or stop the connection to the Analytics Database).
-4. Create a dump to a file of the Analytics database, including data and schema creation statements (Ex: For MySQL DB you could use mysqldump, mysqldump [options] &lt;AnalyticsDBName&gt; --complete-insert --flush-logs --no-create-db --result-file=&lt;filename&gt;.sql).
-5. On the sql dump file created in Step 4, look for the table with name, **versions**, and in the insert statements, substitute the value for **DomainID**, with the value for the new installation. The DomainID value can be found at, *&lt;INSTALL_DIR&gt;/system/conf/nodemanager.xml*, in the attribute, **domainID**.
-6. Reload the sql dump file create on Step 3 into the database created in Step 2 (Ex: For MySQL DB, mysql &lt;Database Name From Step 2&gt; &lt; &lt;Sql file created in Step 4&gt;).
-7. Configure the new Analytics to connect to the Database created in step 2, by running, *&lt;INSTALL_DIR&gt;/analytics/posix/bin/configureserver*.
-8. Start the new Analytics and verify the data from the old instalation was imported.
-9. Configure the new Gateway to use metrics, using managedomain, using the metrics database created on Step 2.
-10. Start the new Gateway and  validate that new metrics data are available.
+1. Do not configure you new API Gateway to use metrics.
+2. Create the new Analytics database. For example, in MySQL DB, you can use `CREATE DATABASE <DatabaseName>`).
+3. Stop the old API Gateway and Analytics (or, stop the connection to the Analytics Database).
+4. Create a dump to a file of the Analytics database, including data and schema creation statements. For example, for MySQL DB you can run:
+
+    ```
+    mysqldump [options] <AnalyticsDBName> –complete-insert –flush-logs –no-create-db –result-file=<filename>.sql
+    ```
+5. On the SQL dump file previously created, search for the table named **versions**, and in the insert statements, substitute the value for **DomainID**, with the value for the new installation. The DomainID value can be found at `<INSTALL_DIR>/system/conf/nodemanager.xml`, in the **domainID** attribute.
+6. Reload the SQL dump file. For example, for MySQL DB you can run:
+
+    ```
+    mysql <AnalyticsDBName> <SQLdumpFileName>
+    ```
+7. Configure the new Analytics to connect to the database created by running, `<INSTALL_DIR>/analytics/posix/bin/configureserver`.
+8. Start the new Analytics and verify the data from the old installation was imported.
+9. Using `managedomain`, configure the new gateway to use metrics from your new database.
+10. Start the new gateway and verify the new metrics are available.
