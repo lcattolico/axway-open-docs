@@ -251,7 +251,7 @@ If you have implemented the rollback strategy described in the preceding section
 Follow these steps to migrate the Analytics database to another database:
 
 1. Do not configure you new API Gateway to use metrics.
-2. Create the new Analytics database. For example, in MySQL DB, you can use `CREATE DATABASE <DatabaseName>`).
+2. Create the new Analytics database. For example, in MySQL DB, you can use `CREATE DATABASE <DatabaseName>`.
 3. Stop the old API Gateway and Analytics (or, stop the connection to the Analytics Database).
 4. Create a dump to a file of the Analytics database, including data and schema creation statements. For example, for MySQL DB you can run:
 
